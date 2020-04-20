@@ -776,7 +776,7 @@ public class DefaultDashChunkSource implements DashChunkSource {
         long liveEdgeTimeInPeriodUs = liveEdgeTimeUs - periodStartUs;
         // getSegmentNum(liveEdgeTimeInPeriodUs) will not be completed yet, so subtract one to get
         // the index of the last completed segment.
-        return getSegmentNum(liveEdgeTimeInPeriodUs) - 1;
+        return getSegmentNum(liveEdgeTimeInPeriodUs);
       }
       return getFirstSegmentNum() + availableSegmentCount - 1;
     }
