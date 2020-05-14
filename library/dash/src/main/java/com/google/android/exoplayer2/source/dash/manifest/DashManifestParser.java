@@ -129,6 +129,7 @@ public class DashManifestParser extends DefaultHandler
     long baseUrlAvailabilityTimeOffsetUs = dynamic ? 0 : C.TIME_UNSET;
 
     List<Period> periods = new ArrayList<>();
+    List<Period> earlyAccessPeriods = new ArrayList<>();
     long nextPeriodStartMs = dynamic ? C.TIME_UNSET : 0;
     boolean seenEarlyAccessPeriod = false;
     boolean seenFirstBaseUrl = false;
@@ -163,6 +164,7 @@ public class DashManifestParser extends DefaultHandler
           if (dynamic) {
             // This is an early access period. Ignore it. All subsequent periods must also be
             // early access.
+            earlyAccessPeriods.add(period);
             seenEarlyAccessPeriod = true;
           } else {
             throw new ParserException("Unable to determine start of period " + periods.size());
@@ -190,8 +192,7 @@ public class DashManifestParser extends DefaultHandler
     if (periods.isEmpty()) {
       throw new ParserException("No periods found.");
     }
-
-    return buildMediaPresentationDescription(
+      DashManifest manifest = buildMediaPresentationDescription(
         availabilityStartTime,
         durationMs,
         minBufferTimeMs,
@@ -205,6 +206,8 @@ public class DashManifestParser extends DefaultHandler
         serviceDescription,
         location,
         periods);
+      manifest.earlyAccessPeriods = earlyAccessPeriods;
+      return manifest;
   }
 
   protected DashManifest buildMediaPresentationDescription(
@@ -1740,7 +1743,14 @@ public class DashManifestParser extends DefaultHandler
 
   protected static long parseLong(XmlPullParser xpp, String name, long defaultValue) {
     String value = xpp.getAttributeValue(null, name);
-    return value == null ? defaultValue : Long.parseLong(value);
+      if (value == null) {
+          return defaultValue;
+      }
+      try {
+          return Long.parseLong(value);
+      } catch (NumberFormatException ex) {
+          return defaultValue;
+      }
   }
 
   protected static float parseFloat(XmlPullParser xpp, String name, float defaultValue) {

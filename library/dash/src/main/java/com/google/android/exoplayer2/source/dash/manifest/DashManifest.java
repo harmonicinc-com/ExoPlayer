@@ -92,6 +92,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
   @Nullable public final ProgramInformation programInformation;
 
   private final List<Period> periods;
+  List<Period> earlyAccessPeriods;
 
   /**
    * @deprecated Use {@link #DashManifest(long, long, long, boolean, long, long, long, long,
@@ -153,10 +154,15 @@ public class DashManifest implements FilterableManifest<DashManifest> {
     this.location = location;
     this.serviceDescription = serviceDescription;
     this.periods = periods == null ? Collections.emptyList() : periods;
+    this.earlyAccessPeriods = Collections.emptyList();
   }
 
   public final int getPeriodCount() {
     return periods.size();
+  }
+
+  public final List<Period> getEarlyAccessPeriods() {
+    return earlyAccessPeriods;
   }
 
   public final Period getPeriod(int index) {
