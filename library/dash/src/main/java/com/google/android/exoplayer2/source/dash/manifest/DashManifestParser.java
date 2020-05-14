@@ -251,6 +251,11 @@ public class DashManifestParser extends DefaultHandler
       }
     } while (!XmlPullParserUtil.isEndTag(xpp, "Period"));
 
+      Representation.MultiSegmentRepresentation rep = (Representation.MultiSegmentRepresentation) adaptationSets.get(0).representations.get(0);
+      if (rep.segmentBase.duration == C.TIME_UNSET && rep.segmentBase.segmentTimeline == null) {
+          Log.d(TAG, "Invalid SegmentTemplate when parsing Period, assume period is Early Access Period");
+          startMs = defaultStartMs;
+      }
     return Pair.create(buildPeriod(id, startMs, adaptationSets, eventStreams), durationMs);
   }
 
@@ -1545,7 +1550,14 @@ public class DashManifestParser extends DefaultHandler
 
   protected static long parseLong(XmlPullParser xpp, String name, long defaultValue) {
     String value = xpp.getAttributeValue(null, name);
-    return value == null ? defaultValue : Long.parseLong(value);
+      if (value == null) {
+          return defaultValue;
+      }
+      try {
+          return Long.parseLong(value);
+      } catch (NumberFormatException ex) {
+          return defaultValue;
+      }
   }
 
   protected static String parseString(XmlPullParser xpp, String name, String defaultValue) {
