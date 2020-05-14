@@ -16,10 +16,13 @@
 package com.google.android.exoplayer2.source.dash.manifest;
 
 import android.net.Uri;
+
 import androidx.annotation.Nullable;
+
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.offline.FilterableManifest;
 import com.google.android.exoplayer2.offline.StreamKey;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -89,6 +92,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
   @Nullable public final ProgramInformation programInformation;
 
   private final List<Period> periods;
+  List<Period> earlyAccessPeriods;
 
   /**
    * @deprecated Use {@link #DashManifest(long, long, long, boolean, long, long, long, long,
@@ -147,10 +151,15 @@ public class DashManifest implements FilterableManifest<DashManifest> {
     this.utcTiming = utcTiming;
     this.location = location;
     this.periods = periods == null ? Collections.emptyList() : periods;
+    this.earlyAccessPeriods = Collections.emptyList();
   }
 
   public final int getPeriodCount() {
     return periods.size();
+  }
+
+  public final List<Period> getEarlyAccessPeriods() {
+    return earlyAccessPeriods;
   }
 
   public final Period getPeriod(int index) {

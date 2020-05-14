@@ -20,7 +20,9 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Pair;
 import android.util.Xml;
+
 import androidx.annotation.Nullable;
+
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.ParserException;
@@ -39,6 +41,14 @@ import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.UriUtil;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.util.XmlPullParserUtil;
+
+import org.checkerframework.checker.nullness.compatqual.NullableType;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
+import org.xmlpull.v1.XmlSerializer;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,12 +58,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.checkerframework.checker.nullness.compatqual.NullableType;
-import org.xml.sax.helpers.DefaultHandler;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
-import org.xmlpull.v1.XmlSerializer;
 
 /**
  * A parser of media presentation description files.
@@ -116,6 +120,7 @@ public class DashManifestParser extends DefaultHandler
     Uri location = null;
 
     List<Period> periods = new ArrayList<>();
+      List<Period> earlyAccessPeriods = new ArrayList<>();
     long nextPeriodStartMs = dynamic ? C.TIME_UNSET : 0;
     boolean seenEarlyAccessPeriod = false;
     boolean seenFirstBaseUrl = false;
@@ -139,6 +144,7 @@ public class DashManifestParser extends DefaultHandler
           if (dynamic) {
             // This is an early access period. Ignore it. All subsequent periods must also be
             // early access.
+              earlyAccessPeriods.add(period);
             seenEarlyAccessPeriod = true;
           } else {
             throw new ParserException("Unable to determine start of period " + periods.size());
@@ -166,8 +172,7 @@ public class DashManifestParser extends DefaultHandler
     if (periods.isEmpty()) {
       throw new ParserException("No periods found.");
     }
-
-    return buildMediaPresentationDescription(
+      DashManifest manifest = buildMediaPresentationDescription(
         availabilityStartTime,
         durationMs,
         minBufferTimeMs,
@@ -180,6 +185,8 @@ public class DashManifestParser extends DefaultHandler
         utcTiming,
         location,
         periods);
+      manifest.earlyAccessPeriods = earlyAccessPeriods;
+      return manifest;
   }
 
   protected DashManifest buildMediaPresentationDescription(
