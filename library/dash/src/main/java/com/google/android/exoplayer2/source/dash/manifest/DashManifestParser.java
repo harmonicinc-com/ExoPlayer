@@ -258,11 +258,15 @@ public class DashManifestParser extends DefaultHandler
       }
     } while (!XmlPullParserUtil.isEndTag(xpp, "Period"));
 
+    try {
       Representation.MultiSegmentRepresentation rep = (Representation.MultiSegmentRepresentation) adaptationSets.get(0).representations.get(0);
       if (rep.segmentBase.duration == C.TIME_UNSET && rep.segmentBase.segmentTimeline == null) {
-          Log.d(TAG, "Invalid SegmentTemplate when parsing Period, assume period is Early Access Period");
-          startMs = defaultStartMs;
+        Log.d(TAG, "Invalid SegmentTemplate when parsing Period, assume period is Early Access Period");
+        startMs = defaultStartMs;
       }
+    } catch (ClassCastException ex) {
+
+    }
     return Pair.create(buildPeriod(id, startMs, adaptationSets, eventStreams), durationMs);
   }
 
