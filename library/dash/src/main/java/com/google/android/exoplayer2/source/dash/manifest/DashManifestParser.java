@@ -42,6 +42,7 @@ import com.google.android.exoplayer2.util.UriUtil;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.util.XmlPullParserUtil;
 
+import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.compatqual.NullableType;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xmlpull.v1.XmlPullParser;
@@ -49,9 +50,11 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -74,6 +77,7 @@ public class DashManifestParser extends DefaultHandler
       Pattern.compile("([1-9]|[1-5][0-9]|6[0-3])=.*");
 
   private final XmlPullParserFactory xmlParserFactory;
+  private String manifestString;
 
   public DashManifestParser() {
     try {
@@ -88,8 +92,11 @@ public class DashManifestParser extends DefaultHandler
   @Override
   public DashManifest parse(Uri uri, InputStream inputStream) throws IOException {
     try {
+      this.manifestString = IOUtils.toString(inputStream, Charset.defaultCharset());
+      InputStream textStream = new ByteArrayInputStream(this.manifestString.getBytes());
+
       XmlPullParser xpp = xmlParserFactory.newPullParser();
-      xpp.setInput(inputStream, null);
+      xpp.setInput(textStream, null);
       int eventType = xpp.next();
       if (eventType != XmlPullParser.START_TAG || !"MPD".equals(xpp.getName())) {
         throw new ParserException(
@@ -99,6 +106,11 @@ public class DashManifestParser extends DefaultHandler
     } catch (XmlPullParserException e) {
       throw new ParserException(e);
     }
+  }
+
+  static String convertStreamToString(java.io.InputStream is) {
+    java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+    return s.hasNext() ? s.next() : "";
   }
 
   protected DashManifest parseMediaPresentationDescription(XmlPullParser xpp,
@@ -118,6 +130,7 @@ public class DashManifestParser extends DefaultHandler
     ProgramInformation programInformation = null;
     UtcTimingElement utcTiming = null;
     Uri location = null;
+    PatchLocation patchLocation = null;
 
     List<Period> periods = new ArrayList<>();
       List<Period> earlyAccessPeriods = new ArrayList<>();
@@ -131,7 +144,9 @@ public class DashManifestParser extends DefaultHandler
           baseUrl = parseBaseUrl(xpp, baseUrl);
           seenFirstBaseUrl = true;
         }
-      } else if (XmlPullParserUtil.isStartTag(xpp, "ProgramInformation")) {
+      } else if (XmlPullParserUtil.isStartTag(xpp, "PatchLocation")) {
+        patchLocation = parsePatchLocation(xpp, baseUrl);
+      }else if (XmlPullParserUtil.isStartTag(xpp, "ProgramInformation")) {
         programInformation = parseProgramInformation(xpp);
       } else if (XmlPullParserUtil.isStartTag(xpp, "UTCTiming")) {
         utcTiming = parseUtcTiming(xpp);
@@ -184,6 +199,7 @@ public class DashManifestParser extends DefaultHandler
         programInformation,
         utcTiming,
         location,
+        patchLocation,
         periods);
       manifest.earlyAccessPeriods = earlyAccessPeriods;
       return manifest;
@@ -201,6 +217,7 @@ public class DashManifestParser extends DefaultHandler
       @Nullable ProgramInformation programInformation,
       @Nullable UtcTimingElement utcTiming,
       @Nullable Uri location,
+      @Nullable PatchLocation patchLocation,
       List<Period> periods) {
     return new DashManifest(
         availabilityStartTime,
@@ -214,6 +231,7 @@ public class DashManifestParser extends DefaultHandler
         programInformation,
         utcTiming,
         location,
+        patchLocation,
         periods);
   }
 
@@ -409,6 +427,10 @@ public class DashManifestParser extends DefaultHandler
       return C.TRACK_TYPE_TEXT;
     }
     return C.TRACK_TYPE_UNKNOWN;
+  }
+
+  public String getManifestString() {
+    return manifestString;
   }
 
   /**
@@ -1178,6 +1200,22 @@ public class DashManifestParser extends DefaultHandler
   protected String parseBaseUrl(XmlPullParser xpp, String parentBaseUrl)
       throws XmlPullParserException, IOException {
     return UriUtil.resolve(parentBaseUrl, parseText(xpp, "BaseURL"));
+  }
+
+  /**
+   * Parses a PatchLocation element.
+   *
+   * @param xpp The parser from which to read.
+   * @param parentBaseUrl A base URL for resolving the parsed URL.
+   * @throws XmlPullParserException If an error occurs parsing the element.
+   * @throws IOException If an error occurs reading the element.
+   * @return The parsed and resolved URL.
+   */
+  protected PatchLocation parsePatchLocation(XmlPullParser xpp, String parentBaseUrl)
+      throws XmlPullParserException, IOException {
+    long ttl = parseLong(xpp, "ttl", 0);
+    String url = UriUtil.resolve(parentBaseUrl, parseText(xpp, "PatchLocation"));
+    return new PatchLocation(ttl, url);
   }
 
   // AudioChannelConfiguration parsing.

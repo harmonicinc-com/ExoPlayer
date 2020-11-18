@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><Patch><add sel="/MPD/Period[@id='87']/AdaptationSet[2]/SegmentTemplate/SegmentTimeline"><S d="39680000" t="240376111"/><S d="18346666" t="280056111"/></add></Patch>

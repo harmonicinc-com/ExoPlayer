@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Patch xmlns="urn:mpeg:dash:schema:mpd-patch:2020" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:dash:schema:mpd-patch:2020 DASH-MPDPATCH.xsd" mpdId="mpd-id" originalPublishTime="2020-11-11T02:24:07.515591086Z" publishTime="2020-11-11T02:24:23.515486809Z">
+   <replace sel="/MPD/PatchLocation">
+      <PatchLocation ttl="66">manifest-patch.mpd?publishTime=2020-11-09T03:48:43.514902582Z</PatchLocation>
+   </replace>
+</Patch>

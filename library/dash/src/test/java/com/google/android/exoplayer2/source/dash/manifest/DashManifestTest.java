@@ -231,6 +231,7 @@ public class DashManifestTest {
         /* programInformation= */ null,
         DUMMY_UTC_TIMING,
         Uri.EMPTY,
+        null,
         Arrays.asList(periods));
   }
 

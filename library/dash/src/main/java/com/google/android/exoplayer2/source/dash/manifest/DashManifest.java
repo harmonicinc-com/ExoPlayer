@@ -88,6 +88,9 @@ public class DashManifest implements FilterableManifest<DashManifest> {
   /** The location of this manifest, or null if not present. */
   @Nullable public final Uri location;
 
+  /** The patch location of this manifest, or null if not present. */
+  @Nullable public final PatchLocation patchLocation;
+
   /** The {@link ProgramInformation}, or null if not present. */
   @Nullable public final ProgramInformation programInformation;
 
@@ -110,6 +113,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
       long publishTimeMs,
       @Nullable UtcTimingElement utcTiming,
       @Nullable Uri location,
+      @Nullable PatchLocation patchLocation,
       List<Period> periods) {
     this(
         availabilityStartTimeMs,
@@ -123,6 +127,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
         /* programInformation= */ null,
         utcTiming,
         location,
+        patchLocation,
         periods);
   }
 
@@ -138,6 +143,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
       @Nullable ProgramInformation programInformation,
       @Nullable UtcTimingElement utcTiming,
       @Nullable Uri location,
+      @Nullable PatchLocation patchLocation,
       List<Period> periods) {
     this.availabilityStartTimeMs = availabilityStartTimeMs;
     this.durationMs = durationMs;
@@ -150,6 +156,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
     this.programInformation = programInformation;
     this.utcTiming = utcTiming;
     this.location = location;
+    this.patchLocation = patchLocation;
     this.periods = periods == null ? Collections.emptyList() : periods;
     this.earlyAccessPeriods = Collections.emptyList();
   }
@@ -213,6 +220,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
         programInformation,
         utcTiming,
         location,
+        patchLocation,
         copyPeriods);
   }
 

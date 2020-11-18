@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Patch xmlns="urn:mpeg:dash:schema:mpd-patch:2020" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:dash:schema:mpd-patch:2020 DASH-MPDPATCH.xsd" mpdId="mpd-id" originalPublishTime="2020-11-09T03:48:41.51468868Z" publishTime="2020-11-09T03:48:43.514902582Z">
+   <replace sel="/MPD/@timeShiftBufferDepth">PT0M25.112493S</replace>
+   <replace sel="/MPD/@publishTime">2020-11-09T03:48:43.514902582Z</replace>
+   <replace sel="/MPD/PatchLocation">
+      <PatchLocation ttl="60">manifest-patch.mpd?publishTime=2020-11-09T03:48:43.514902582Z</PatchLocation>
+   </replace>
+   <add sel="/MPD/Period[@id=&apos;81&apos;]/EventStream">
+      <Event id="24000" duration="4000" presentationTime="24000">
+         <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:24000,&quot;layer&quot;:0}]</messageData>
+      </Event>
+   </add>
+   <replace sel="/MPD/Period[@id=&apos;81&apos;]/AdaptationSet/SegmentTemplate/SegmentTimeline/S/@r">6</replace>
+   <add sel="/MPD/Period[@id=&apos;81&apos;]/AdaptationSet[2]/SegmentTemplate/SegmentTimeline">
+      <S t="240376111" d="39680000"/>
+   </add>
+</Patch>

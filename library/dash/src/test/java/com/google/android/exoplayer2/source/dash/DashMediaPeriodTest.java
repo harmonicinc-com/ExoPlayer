@@ -151,6 +151,7 @@ public final class DashMediaPeriodTest {
         /* programInformation= */ null,
         new UtcTimingElement("", ""),
         Uri.EMPTY,
+        null,
         Arrays.asList(periods));
   }
 

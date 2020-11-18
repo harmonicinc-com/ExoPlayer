@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD id="ottdump-mpd-id" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="dynamic" availabilityStartTime="2020-11-06T02:29:01Z" minimumUpdatePeriod="PT4.0S" minBufferTime="PT4.0S" publishTime="2020-11-09T03:48:39.514833095Z" timeShiftBufferDepth="PT0M23.030854S" suggestedPresentationDelay="PT2.0S" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd">
+   <PatchLocation ttl="60">manifest-patch.mpd?publishTime=2020-11-09T03:48:39.514833095Z</PatchLocation>
+   <Period start="PT4322M6.000000S" id="81">
+      <BaseURL>/asset=dash_with_patching,version=v1,replaystarttime=1604889069,user=sample_user/</BaseURL>
+      <EventStream timescale="1000" schemeIdUri="overlayInfo">
+         <Event id="0" duration="4000" presentationTime="0">
+            <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:0,&quot;layer&quot;:0}]</messageData>
+         </Event>
+         <Event id="4000" duration="4000" presentationTime="4000">
+            <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:4000,&quot;layer&quot;:0}]</messageData>
+         </Event>
+         <Event id="8000" duration="4000" presentationTime="8000">
+            <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:8000,&quot;layer&quot;:0}]</messageData>
+         </Event>
+         <Event id="12000" duration="4000" presentationTime="12000">
+            <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:12000,&quot;layer&quot;:0}]</messageData>
+         </Event>
+         <Event id="16000" duration="4000" presentationTime="16000">
+            <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:16000,&quot;layer&quot;:0}]</messageData>
+         </Event>
+         <Event id="20000" duration="4000" presentationTime="20000">
+            <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:20000,&quot;layer&quot;:0}]</messageData>
+         </Event>
+      </EventStream>
+      <AdaptationSet mimeType="video/mp4" startWithSAP="1" segmentAlignment="true">
+         <SegmentTemplate timescale="10000000" presentationTimeOffset="0" media="$RepresentationID$/Segment-$Time$.m4v" initialization="$RepresentationID$/init.m4i">
+            <SegmentTimeline>
+               <S t="0" d="40000000" r="5"/>
+            </SegmentTimeline>
+         </SegmentTemplate>
+         <Representation width="320" height="240" frameRate="15/2" codecs="avc1.428029" scanType="progressive" id="stream_0" bandwidth="92000"/>
+         <Representation width="320" height="240" frameRate="15" codecs="avc1.4d4029" scanType="progressive" id="stream_1" bandwidth="500000"/>
+         <Representation width="480" height="360" frameRate="15" codecs="avc1.4d4029" scanType="progressive" id="stream_2" bandwidth="750000"/>
+         <Representation width="640" height="480" frameRate="15" codecs="avc1.4d4029" scanType="progressive" id="stream_3" bandwidth="1200000"/>
+         <Representation width="640" height="480" frameRate="30" codecs="avc1.640029" scanType="progressive" id="stream_4" bandwidth="2500000"/>
+      </AdaptationSet>
+      <AdaptationSet mimeType="audio/mp4" startWithSAP="1" lang="eng" segmentAlignment="true">
+         <SegmentTemplate timescale="10000000" presentationTimeOffset="0" media="$RepresentationID$/Segment-$Time$.m4a" initialization="$RepresentationID$/init.m4i">
+            <SegmentTimeline>
+               <S t="162777" d="40106667" r="1"/>
+               <S t="80376111" d="39680000"/>
+               <S t="120056111" d="40106666"/>
+               <S t="160162777" d="40106667" r="1"/>
+            </SegmentTimeline>
+         </SegmentTemplate>
+         <Representation audioSamplingRate="48000" codecs="mp4a.40.5" id="stream_5" bandwidth="40000"/>
+      </AdaptationSet>
+   </Period>
+</MPD>
