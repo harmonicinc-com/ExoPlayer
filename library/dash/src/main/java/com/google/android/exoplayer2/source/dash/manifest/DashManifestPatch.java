@@ -35,8 +35,10 @@ public class DashManifestPatch {
     public boolean applyPatch(Document document) {
         XPath xPath =  XPathFactory.newInstance().newXPath();
         boolean result = true;
+        @Nullable Operation lastOperation = null;
         try {
             for (Operation operation : operations) {
+                lastOperation = operation;
                 if (!operation.execute(document, xPath)) {
                     Log.w(TAG, "Failed to execute operation, xpath: " + operation.getXPath());
                     result = false;
@@ -44,7 +46,8 @@ public class DashManifestPatch {
                 }
             }
         } catch (XPathExpressionException ex) {
-            Log.w(TAG, "Failed to apply patch", ex);
+            String xpath = lastOperation != null ? lastOperation.getXPath() : null;
+            Log.w(TAG, "Failed to apply patch, xpath: " + xpath, ex);
             result = false;
         }
         return result;

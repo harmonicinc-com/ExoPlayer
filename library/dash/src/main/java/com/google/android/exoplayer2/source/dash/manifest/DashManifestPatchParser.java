@@ -51,6 +51,7 @@ public class DashManifestPatchParser extends DefaultHandler
     private DocumentBuilder documentBuilder;
     @Nullable private Element root;
     @Nullable private String manifestString;
+    @Nullable public String manifestPatchString;
 
     public DashManifestPatchParser() {
         try {
@@ -70,8 +71,7 @@ public class DashManifestPatchParser extends DefaultHandler
             return;
         }
         this.manifestString = manifestString;
-        String str = manifestString.replaceAll(">[\\s\r\n]*<", "><");
-        InputStream stream = new ByteArrayInputStream(str.getBytes());
+        InputStream stream = new ByteArrayInputStream(manifestString.getBytes());
         document = documentBuilder.parse(stream);
         root = null;
     }
@@ -98,8 +98,11 @@ public class DashManifestPatchParser extends DefaultHandler
     @Override
     public DashManifestPatch parse(Uri uri, InputStream inputStream) throws IOException {
         try {
+            this.manifestPatchString = IOUtils.toString(inputStream, Charset.defaultCharset());
+            InputStream textStream = new ByteArrayInputStream(this.manifestPatchString.getBytes());
+
             XmlPullParser xpp = xmlParserFactory.newPullParser();
-            xpp.setInput(inputStream, null);
+            xpp.setInput(textStream, null);
             int eventType = xpp.next();
             if (eventType != XmlPullParser.START_TAG || !"Patch".equals(xpp.getName())) {
                 throw new ParserException(

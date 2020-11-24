@@ -44,6 +44,7 @@ import com.google.android.exoplayer2.source.dash.manifest.DashManifest;
 import com.google.android.exoplayer2.source.dash.manifest.DashManifestParser;
 import com.google.android.exoplayer2.source.dash.manifest.DashManifestPatch;
 import com.google.android.exoplayer2.source.dash.manifest.DashManifestPatchParser;
+import com.google.android.exoplayer2.source.dash.manifest.DocumentToManifestConverter;
 import com.google.android.exoplayer2.source.dash.manifest.UtcTimingElement;
 import com.google.android.exoplayer2.upstream.Allocator;
 import com.google.android.exoplayer2.upstream.ByteArrayDataSource;
@@ -776,8 +777,13 @@ public final class DashMediaSource extends BaseMediaSource {
         elapsedRealtimeMs,
         loadDurationMs,
         loadable.bytesLoaded());
-    DashManifest newManifest = loadable.getResult();
+    onManifestUpdated(loadable.getResult(), elapsedRealtimeMs, loadDurationMs,
+                      loadable.type, loadable.dataSpec.uri);
+  }
 
+  /* package */ void onManifestUpdated(DashManifest newManifest,
+                                       long elapsedRealtimeMs, long loadDurationMs,
+                                       int type, Uri uri) {
     int oldPeriodCount = manifest == null ? 0 : manifest.getPeriodCount();
     int removedPeriodCount = 0;
     long newFirstPeriodStartTimeMs = newManifest.getPeriod(0).startMs;
@@ -812,7 +818,7 @@ public final class DashMediaSource extends BaseMediaSource {
 
       if (isManifestStale) {
         if (staleManifestReloadAttempt++
-            < loadErrorHandlingPolicy.getMinimumLoadableRetryCount(loadable.type)) {
+            < loadErrorHandlingPolicy.getMinimumLoadableRetryCount(type)) {
           scheduleManifestRefresh(getManifestLoadRetryDelayMillis());
         } else {
           manifestFatalError = new DashManifestStaleException();
@@ -831,7 +837,7 @@ public final class DashMediaSource extends BaseMediaSource {
         // This condition checks that replaceManifestUri wasn't called between the start and end of
         // this load. If it was, we ignore the manifest location and prefer the manual replacement.
         @SuppressWarnings("ReferenceEquality")
-        boolean isSameUriInstance = loadable.dataSpec.uri == manifestUri;
+        boolean isSameUriInstance = uri == manifestUri;
         if (isSameUriInstance) {
           manifestUri = manifest.location;
         }
@@ -887,25 +893,21 @@ public final class DashMediaSource extends BaseMediaSource {
             loadDurationMs,
             loadable.bytesLoaded());
     DashManifestPatch patch = loadable.getResult();
-    DashManifestParser parser = (DashManifestParser)manifestParser;
     DashManifestPatchParser patchParser = (DashManifestPatchParser)manifestPatchParser;
     boolean success;
     try {
-      // TODO: Implement manifest <-> document converter
-      // manifest would no longer needed to convert to string
       success = patch.applyPatch(patchParser.getDocument());
-      String manifestString = patchParser.getDocumentString();
-      ByteArrayDataSource byteArrayDataSource = new ByteArrayDataSource(manifestString.getBytes());
-      Log.d(TAG, "Patch success, operation count: " + patch.operations.size());
-      startLoading(
-              new ParsingLoadable<>(byteArrayDataSource, manifestUri, C.DATA_TYPE_MANIFEST, manifestParser),
-              manifestCallback,
-              loadErrorHandlingPolicy.getMinimumLoadableRetryCount(C.DATA_TYPE_MANIFEST));
+      if (success) {
+        Log.d(TAG, "Patch success, operation count: " + patch.operations.size());
+        DashManifest newManifest = DocumentToManifestConverter.convert(patchParser.getDocument(), loadable.getUri().toString());
+        onManifestUpdated(newManifest, elapsedRealtimeMs, loadDurationMs, C.DATA_TYPE_MANIFEST, manifestUri);
+      }
     } catch (Exception ex) {
       success = false;
     }
 
     if (!success) {
+      Log.w(TAG, "Failed to apply patch, patch: " + patchParser.manifestPatchString);
       startLoading(
               new ParsingLoadable<>(dataSource, manifestUri, C.DATA_TYPE_MANIFEST, manifestParser),
               manifestCallback,
