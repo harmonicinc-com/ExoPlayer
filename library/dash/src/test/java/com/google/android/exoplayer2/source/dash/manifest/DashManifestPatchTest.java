@@ -116,13 +116,16 @@ public class DashManifestPatchTest {
         Document document = createDocument(SAMPLE_MPD_WITH_PATCH_LOCATION);
         XPath xPath =  XPathFactory.newInstance().newXPath();
 
-        Element rootElement = document.createElement("PatchLocation");
-        rootElement.setAttribute("ttl", "66");
-        rootElement.setTextContent("manifest-patch.mpd?publishTime=2020-11-09T03:48:43.514902582Z");
+        Element root = document.createElement("root");
+
+        Element location = document.createElement("PatchLocation");
+        root.appendChild(location);
+        location.setAttribute("ttl", "66");
+        location.setTextContent("manifest-patch.mpd?publishTime=2020-11-09T03:48:43.514902582Z");
 
         String path = "/MPD/PatchLocation";
         DashManifestPatch.ReplaceOperation operation = new DashManifestPatch.ReplaceOperation(
-                false, path, null, rootElement);
+                false, path, null, root);
         boolean success = operation.execute(document, xPath);
         assertThat(success).isTrue();
 
@@ -139,28 +142,38 @@ public class DashManifestPatchTest {
         Document document = createDocument(SAMPLE_MPD_WITH_PATCH_LOCATION);
         XPath xPath =  XPathFactory.newInstance().newXPath();
 
-        Element rootElement = document.createElement("SegmentTimeline");
+        Element root = document.createElement("root");
+        Element timeline = document.createElement("SegmentTimeline");
+        root.appendChild(timeline);
+
         Element element = document.createElement("S");
         element.setAttribute("t", "123");
         element.setAttribute("d", "20000000");
         element.setAttribute("r", "6");
-        rootElement.appendChild(element);
+        timeline.appendChild(element);
 
         Element element2 = document.createElement("S");
         element2.setAttribute("t", "120000123");
         element2.setAttribute("d", "30000000");
         element2.setAttribute("r", "3");
-        rootElement.appendChild(element2);
+        timeline.appendChild(element2);
 
         String path = "/MPD/Period[@id='81']/AdaptationSet/SegmentTemplate/SegmentTimeline";
         DashManifestPatch.ReplaceOperation operation = new DashManifestPatch.ReplaceOperation(
-                false, path, null, rootElement);
+                false, path, null, root);
         boolean success = operation.execute(document, xPath);
         assertThat(success).isTrue();
 
         Element targetNode = (Element)xPath.compile(path)
                 .evaluate(document, XPathConstants.NODE);
-        assertThat(targetNode.getChildNodes().getLength()).isEqualTo(2);
+        int elementCount = 0;
+        for (int i = 0; i < targetNode.getChildNodes().getLength(); i++) {
+            if (targetNode.getChildNodes().item(i) instanceof Element) {
+                Element child = (Element)targetNode.getChildNodes().item(i);
+                elementCount++;
+            }
+        }
+        assertThat(elementCount).isEqualTo(2);
 
         Node segment1 = targetNode.getChildNodes().item(0);
         Node segment2 = targetNode.getChildNodes().item(1);
