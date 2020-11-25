@@ -42,8 +42,12 @@ import com.google.android.exoplayer2.source.dash.PlayerEmsgHandler.PlayerEmsgCal
 import com.google.android.exoplayer2.source.dash.manifest.AdaptationSet;
 import com.google.android.exoplayer2.source.dash.manifest.DashManifest;
 import com.google.android.exoplayer2.source.dash.manifest.DashManifestParser;
+import com.google.android.exoplayer2.source.dash.manifest.DashManifestPatch;
+import com.google.android.exoplayer2.source.dash.manifest.DashManifestPatchParser;
+import com.google.android.exoplayer2.source.dash.manifest.DocumentToManifestConverter;
 import com.google.android.exoplayer2.source.dash.manifest.UtcTimingElement;
 import com.google.android.exoplayer2.upstream.Allocator;
+import com.google.android.exoplayer2.upstream.ByteArrayDataSource;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
 import com.google.android.exoplayer2.upstream.LoadErrorHandlingPolicy;
@@ -84,6 +88,7 @@ public final class DashMediaSource extends BaseMediaSource {
     private DrmSessionManager<?> drmSessionManager;
     @Nullable private ParsingLoadable.Parser<? extends DashManifest> manifestParser;
     @Nullable private List<StreamKey> streamKeys;
+    @Nullable private ParsingLoadable.Parser<? extends DashManifestPatch> manifestPatchParser;
     private CompositeSequenceableLoaderFactory compositeSequenceableLoaderFactory;
     private LoadErrorHandlingPolicy loadErrorHandlingPolicy;
     private long livePresentationDelayMs;
@@ -255,6 +260,7 @@ public final class DashMediaSource extends BaseMediaSource {
           /* manifestUri= */ null,
           /* manifestDataSourceFactory= */ null,
           /* manifestParser= */ null,
+          /* manifestPatchParser= */ null,
           chunkSourceFactory,
           compositeSequenceableLoaderFactory,
           drmSessionManager,
@@ -326,11 +332,15 @@ public final class DashMediaSource extends BaseMediaSource {
       if (streamKeys != null) {
         manifestParser = new FilteringManifestParser<>(manifestParser, streamKeys);
       }
+      if (manifestPatchParser == null) {
+        manifestPatchParser = new DashManifestPatchParser();
+      }
       return new DashMediaSource(
           /* manifest= */ null,
           Assertions.checkNotNull(manifestUri),
           manifestDataSourceFactory,
           manifestParser,
+          manifestPatchParser,
           chunkSourceFactory,
           compositeSequenceableLoaderFactory,
           drmSessionManager,
@@ -389,6 +399,8 @@ public final class DashMediaSource extends BaseMediaSource {
   private final EventDispatcher manifestEventDispatcher;
   private final ParsingLoadable.Parser<? extends DashManifest> manifestParser;
   private final ManifestCallback manifestCallback;
+  private final ParsingLoadable.Parser<? extends DashManifestPatch> manifestPatchParser;
+  private final ManifestPatchCallback manifestPatchCallback;
   private final Object manifestUriLock;
   private final SparseArray<DashMediaPeriod> periodsById;
   private final Runnable refreshManifestRunnable;
@@ -463,6 +475,7 @@ public final class DashMediaSource extends BaseMediaSource {
         /* manifestUri= */ null,
         /* manifestDataSourceFactory= */ null,
         /* manifestParser= */ null,
+        /* manifestPatchParser= */ null,
         chunkSourceFactory,
         new DefaultCompositeSequenceableLoaderFactory(),
         DrmSessionManager.getDummyDrmSessionManager(),
@@ -536,6 +549,7 @@ public final class DashMediaSource extends BaseMediaSource {
         manifestUri,
         manifestDataSourceFactory,
         new DashManifestParser(),
+        new DashManifestPatchParser(),
         chunkSourceFactory,
         minLoadableRetryCount,
         livePresentationDelayMs,
@@ -567,6 +581,7 @@ public final class DashMediaSource extends BaseMediaSource {
       Uri manifestUri,
       DataSource.Factory manifestDataSourceFactory,
       ParsingLoadable.Parser<? extends DashManifest> manifestParser,
+      ParsingLoadable.Parser<? extends DashManifestPatch> manifestPatchParser,
       DashChunkSource.Factory chunkSourceFactory,
       int minLoadableRetryCount,
       long livePresentationDelayMs,
@@ -577,6 +592,7 @@ public final class DashMediaSource extends BaseMediaSource {
         manifestUri,
         manifestDataSourceFactory,
         manifestParser,
+        manifestPatchParser,
         chunkSourceFactory,
         new DefaultCompositeSequenceableLoaderFactory(),
         DrmSessionManager.getDummyDrmSessionManager(),
@@ -596,6 +612,7 @@ public final class DashMediaSource extends BaseMediaSource {
       @Nullable Uri manifestUri,
       @Nullable DataSource.Factory manifestDataSourceFactory,
       @Nullable ParsingLoadable.Parser<? extends DashManifest> manifestParser,
+      @Nullable ParsingLoadable.Parser<? extends DashManifestPatch> manifestPatchParser,
       DashChunkSource.Factory chunkSourceFactory,
       CompositeSequenceableLoaderFactory compositeSequenceableLoaderFactory,
       DrmSessionManager<?> drmSessionManager,
@@ -608,6 +625,7 @@ public final class DashMediaSource extends BaseMediaSource {
     this.manifestUri = manifestUri;
     this.manifestDataSourceFactory = manifestDataSourceFactory;
     this.manifestParser = manifestParser;
+    this.manifestPatchParser = manifestPatchParser;
     this.chunkSourceFactory = chunkSourceFactory;
     this.drmSessionManager = drmSessionManager;
     this.loadErrorHandlingPolicy = loadErrorHandlingPolicy;
@@ -624,11 +642,13 @@ public final class DashMediaSource extends BaseMediaSource {
     if (sideloadedManifest) {
       Assertions.checkState(!manifest.dynamic);
       manifestCallback = null;
+      manifestPatchCallback = null;
       refreshManifestRunnable = null;
       simulateManifestRefreshRunnable = null;
       manifestLoadErrorThrower = new LoaderErrorThrower.Dummy();
     } else {
       manifestCallback = new ManifestCallback();
+      manifestPatchCallback = new ManifestPatchCallback();
       manifestLoadErrorThrower = new ManifestLoadErrorThrower();
       refreshManifestRunnable = this::startLoadingManifest;
       simulateManifestRefreshRunnable = () -> processManifest(false);
@@ -757,8 +777,13 @@ public final class DashMediaSource extends BaseMediaSource {
         elapsedRealtimeMs,
         loadDurationMs,
         loadable.bytesLoaded());
-    DashManifest newManifest = loadable.getResult();
+    onManifestUpdated(loadable.getResult(), elapsedRealtimeMs, loadDurationMs,
+                      loadable.type, loadable.dataSpec.uri);
+  }
 
+  /* package */ void onManifestUpdated(DashManifest newManifest,
+                                       long elapsedRealtimeMs, long loadDurationMs,
+                                       int type, Uri uri) {
     int oldPeriodCount = manifest == null ? 0 : manifest.getPeriodCount();
     int removedPeriodCount = 0;
     long newFirstPeriodStartTimeMs = newManifest.getPeriod(0).startMs;
@@ -793,7 +818,7 @@ public final class DashMediaSource extends BaseMediaSource {
 
       if (isManifestStale) {
         if (staleManifestReloadAttempt++
-            < loadErrorHandlingPolicy.getMinimumLoadableRetryCount(loadable.type)) {
+            < loadErrorHandlingPolicy.getMinimumLoadableRetryCount(type)) {
           scheduleManifestRefresh(getManifestLoadRetryDelayMillis());
         } else {
           manifestFatalError = new DashManifestStaleException();
@@ -812,7 +837,7 @@ public final class DashMediaSource extends BaseMediaSource {
         // This condition checks that replaceManifestUri wasn't called between the start and end of
         // this load. If it was, we ignore the manifest location and prefer the manual replacement.
         @SuppressWarnings("ReferenceEquality")
-        boolean isSameUriInstance = loadable.dataSpec.uri == manifestUri;
+        boolean isSameUriInstance = uri == manifestUri;
         if (isSameUriInstance) {
           manifestUri = manifest.location;
         }
@@ -854,6 +879,65 @@ public final class DashMediaSource extends BaseMediaSource {
         loadable.bytesLoaded(),
         error,
         !loadErrorAction.isRetry());
+    return loadErrorAction;
+  }
+
+  /* package */ void onManifestPatchLoadCompleted(ParsingLoadable<DashManifestPatch> loadable,
+                                             long elapsedRealtimeMs, long loadDurationMs) {
+    manifestEventDispatcher.loadCompleted(
+            loadable.dataSpec,
+            loadable.getUri(),
+            loadable.getResponseHeaders(),
+            loadable.type,
+            elapsedRealtimeMs,
+            loadDurationMs,
+            loadable.bytesLoaded());
+    DashManifestPatch patch = loadable.getResult();
+    DashManifestPatchParser patchParser = (DashManifestPatchParser)manifestPatchParser;
+    boolean success;
+    try {
+      success = patch.applyPatch(patchParser.getDocument());
+      if (success) {
+        Log.d(TAG, "Patch success, operation count: " + patch.operations.size());
+        DashManifest newManifest = DocumentToManifestConverter.convert(patchParser.getDocument(), loadable.getUri().toString());
+        onManifestUpdated(newManifest, elapsedRealtimeMs, loadDurationMs, C.DATA_TYPE_MANIFEST, manifestUri);
+      }
+    } catch (Exception ex) {
+      success = false;
+    }
+
+    if (!success) {
+      Log.w(TAG, "Failed to apply patch, patch: " + patchParser.manifestPatchString);
+      startLoading(
+              new ParsingLoadable<>(dataSource, manifestUri, C.DATA_TYPE_MANIFEST, manifestParser),
+              manifestCallback,
+              loadErrorHandlingPolicy.getMinimumLoadableRetryCount(C.DATA_TYPE_MANIFEST));
+    }
+  }
+
+  /* package */ LoadErrorAction onManifestPatchLoadError(
+          ParsingLoadable<DashManifestPatch> loadable,
+          long elapsedRealtimeMs,
+          long loadDurationMs,
+          IOException error,
+          int errorCount) {
+    long retryDelayMs =
+            loadErrorHandlingPolicy.getRetryDelayMsFor(
+                    C.DATA_TYPE_MANIFEST, loadDurationMs, error, errorCount);
+    LoadErrorAction loadErrorAction =
+            retryDelayMs == C.TIME_UNSET
+                    ? Loader.DONT_RETRY_FATAL
+                    : Loader.createRetryAction(/* resetErrorCount= */ false, retryDelayMs);
+    manifestEventDispatcher.loadError(
+            loadable.dataSpec,
+            loadable.getUri(),
+            loadable.getResponseHeaders(),
+            loadable.type,
+            elapsedRealtimeMs,
+            loadDurationMs,
+            loadable.bytesLoaded(),
+            error,
+            !loadErrorAction.isRetry());
     return loadErrorAction;
   }
 
@@ -1077,10 +1161,34 @@ public final class DashMediaSource extends BaseMediaSource {
       manifestUri = this.manifestUri;
     }
     manifestLoadPending = false;
-    startLoading(
-        new ParsingLoadable<>(dataSource, manifestUri, C.DATA_TYPE_MANIFEST, manifestParser),
-        manifestCallback,
-        loadErrorHandlingPolicy.getMinimumLoadableRetryCount(C.DATA_TYPE_MANIFEST));
+
+    boolean needLoadFullManifest = true;
+    if (manifest != null && manifest.patchLocation != null) {
+      if (manifest.publishTimeMs + manifest.patchLocation.ttl * 1000 > System.currentTimeMillis()) {
+        DashManifestPatchParser patchParser = (DashManifestPatchParser)manifestPatchParser;
+        DashManifestParser parser = (DashManifestParser)manifestParser;
+        try {
+          patchParser.setManifestString(parser.getManifestString());
+          startLoading(
+                  new ParsingLoadable<>(dataSource, Uri.parse(manifest.patchLocation.url),
+                                        C.DATA_TYPE_MANIFEST, manifestPatchParser),
+                  manifestPatchCallback,
+                  loadErrorHandlingPolicy.getMinimumLoadableRetryCount(C.DATA_TYPE_MANIFEST));
+          needLoadFullManifest = false;
+        } catch (Exception ex) {
+          Log.w(TAG, "Failed to load Manifest Patch, fallback to load full manifest", ex);
+        }
+      } else {
+        Log.d(TAG, "Manifest Patch timeout, fallback to load full manifest");
+      }
+    }
+
+    if (needLoadFullManifest) {
+      startLoading(
+              new ParsingLoadable<>(dataSource, manifestUri, C.DATA_TYPE_MANIFEST, manifestParser),
+              manifestCallback,
+              loadErrorHandlingPolicy.getMinimumLoadableRetryCount(C.DATA_TYPE_MANIFEST));
+    }
   }
 
   private long getManifestLoadRetryDelayMillis() {
@@ -1338,6 +1446,32 @@ public final class DashMediaSource extends BaseMediaSource {
         IOException error,
         int errorCount) {
       return onManifestLoadError(loadable, elapsedRealtimeMs, loadDurationMs, error, errorCount);
+    }
+
+  }
+
+  private final class ManifestPatchCallback implements Loader.Callback<ParsingLoadable<DashManifestPatch>> {
+
+    @Override
+    public void onLoadCompleted(ParsingLoadable<DashManifestPatch> loadable,
+                                long elapsedRealtimeMs, long loadDurationMs) {
+      onManifestPatchLoadCompleted(loadable, elapsedRealtimeMs, loadDurationMs);
+    }
+
+    @Override
+    public void onLoadCanceled(ParsingLoadable<DashManifestPatch> loadable,
+                               long elapsedRealtimeMs, long loadDurationMs, boolean released) {
+      DashMediaSource.this.onLoadCanceled(loadable, elapsedRealtimeMs, loadDurationMs);
+    }
+
+    @Override
+    public LoadErrorAction onLoadError(
+            ParsingLoadable<DashManifestPatch> loadable,
+            long elapsedRealtimeMs,
+            long loadDurationMs,
+            IOException error,
+            int errorCount) {
+      return onManifestPatchLoadError(loadable, elapsedRealtimeMs, loadDurationMs, error, errorCount);
     }
 
   }

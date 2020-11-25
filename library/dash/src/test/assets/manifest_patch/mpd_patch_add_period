@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Patch xmlns="urn:mpeg:dash:schema:mpd-patch:2020" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:dash:schema:mpd-patch:2020 DASH-MPDPATCH.xsd" mpdId="mpd-id" originalPublishTime="2020-11-11T02:24:07.515591086Z" publishTime="2020-11-11T02:24:23.515486809Z">
+   <add sel="/MPD">
+      <Period start="PT4325M36.059988S" id="88">
+         <BaseURL>/asset=dash_with_patching,version=v1,replaystarttime=1605061242,user=sample-user/</BaseURL>
+         <EventStream timescale="1000" schemeIdUri="overlayInfo">
+            <Event id="0" duration="4000" presentationTime="0">
+               <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:59,&quot;layer&quot;:0}]</messageData>
+            </Event>
+            <Event id="4000" duration="4000" presentationTime="4000">
+               <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:4059,&quot;layer&quot;:0}]</messageData>
+            </Event>
+            <Event id="8000" duration="4000" presentationTime="8000">
+               <messageData>[{&quot;overlayUrl&quot;:&quot;https://example.com/graphics/index.html&quot;,&quot;playTime&quot;:8059,&quot;layer&quot;:0}]</messageData>
+            </Event>
+         </EventStream>
+         <AdaptationSet mimeType="video/mp4" startWithSAP="1" segmentAlignment="true">
+            <SegmentTemplate timescale="10000000" presentationTimeOffset="0" media="$RepresentationID$/Segment-$Time$.m4v" initialization="$RepresentationID$/init.m4i">
+               <SegmentTimeline>
+                  <S t="0" d="40040000" r="2"/>
+               </SegmentTimeline>
+            </SegmentTemplate>
+            <Representation width="320" height="180" frameRate="60000/1001" codecs="avc1.4d401f" scanType="progressive" id="stream_0" bandwidth="160000"/>
+            <Representation width="640" height="360" frameRate="60000/1001" codecs="avc1.4d401f" scanType="progressive" id="stream_1" bandwidth="640000"/>
+         </AdaptationSet>
+         <AdaptationSet mimeType="audio/mp4" startWithSAP="1" lang="eng" segmentAlignment="true">
+            <SegmentTemplate timescale="10000000" presentationTimeOffset="0" media="$RepresentationID$/Segment-$Time$.m4a" initialization="$RepresentationID$/init.m4i">
+               <SegmentTimeline>
+                  <S t="162444" d="40106667"/>
+                  <S t="40269111" d="40106666"/>
+                  <S t="80375777" d="40106667"/>
+               </SegmentTimeline>
+            </SegmentTemplate>
+            <Representation audioSamplingRate="48000" codecs="mp4a.40.29" id="stream_2" bandwidth="48000"/>
+         </AdaptationSet>
+      </Period>
+   </add>
+</Patch>

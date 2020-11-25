@@ -42,6 +42,7 @@ import com.google.android.exoplayer2.util.UriUtil;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.util.XmlPullParserUtil;
 
+import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.compatqual.NullableType;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xmlpull.v1.XmlPullParser;
@@ -49,9 +50,11 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -74,6 +77,7 @@ public class DashManifestParser extends DefaultHandler
       Pattern.compile("([1-9]|[1-5][0-9]|6[0-3])=.*");
 
   private final XmlPullParserFactory xmlParserFactory;
+  private String manifestString;
 
   public DashManifestParser() {
     try {
@@ -88,8 +92,11 @@ public class DashManifestParser extends DefaultHandler
   @Override
   public DashManifest parse(Uri uri, InputStream inputStream) throws IOException {
     try {
+      this.manifestString = IOUtils.toString(inputStream, Charset.defaultCharset());
+      InputStream textStream = new ByteArrayInputStream(this.manifestString.getBytes());
+
       XmlPullParser xpp = xmlParserFactory.newPullParser();
-      xpp.setInput(inputStream, null);
+      xpp.setInput(textStream, null);
       int eventType = xpp.next();
       if (eventType != XmlPullParser.START_TAG || !"MPD".equals(xpp.getName())) {
         throw new ParserException(
@@ -99,6 +106,11 @@ public class DashManifestParser extends DefaultHandler
     } catch (XmlPullParserException e) {
       throw new ParserException(e);
     }
+  }
+
+  static String convertStreamToString(java.io.InputStream is) {
+    java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+    return s.hasNext() ? s.next() : "";
   }
 
   protected DashManifest parseMediaPresentationDescription(XmlPullParser xpp,
@@ -118,6 +130,7 @@ public class DashManifestParser extends DefaultHandler
     ProgramInformation programInformation = null;
     UtcTimingElement utcTiming = null;
     Uri location = null;
+    PatchLocation patchLocation = null;
 
     List<Period> periods = new ArrayList<>();
       List<Period> earlyAccessPeriods = new ArrayList<>();
@@ -131,7 +144,9 @@ public class DashManifestParser extends DefaultHandler
           baseUrl = parseBaseUrl(xpp, baseUrl);
           seenFirstBaseUrl = true;
         }
-      } else if (XmlPullParserUtil.isStartTag(xpp, "ProgramInformation")) {
+      } else if (XmlPullParserUtil.isStartTag(xpp, "PatchLocation")) {
+        patchLocation = parsePatchLocation(xpp, baseUrl);
+      }else if (XmlPullParserUtil.isStartTag(xpp, "ProgramInformation")) {
         programInformation = parseProgramInformation(xpp);
       } else if (XmlPullParserUtil.isStartTag(xpp, "UTCTiming")) {
         utcTiming = parseUtcTiming(xpp);
@@ -184,6 +199,7 @@ public class DashManifestParser extends DefaultHandler
         programInformation,
         utcTiming,
         location,
+        patchLocation,
         periods);
       manifest.earlyAccessPeriods = earlyAccessPeriods;
       return manifest;
@@ -201,6 +217,7 @@ public class DashManifestParser extends DefaultHandler
       @Nullable ProgramInformation programInformation,
       @Nullable UtcTimingElement utcTiming,
       @Nullable Uri location,
+      @Nullable PatchLocation patchLocation,
       List<Period> periods) {
     return new DashManifest(
         availabilityStartTime,
@@ -214,6 +231,7 @@ public class DashManifestParser extends DefaultHandler
         programInformation,
         utcTiming,
         location,
+        patchLocation,
         periods);
   }
 
@@ -390,6 +408,10 @@ public class DashManifestParser extends DefaultHandler
 
   protected int parseContentType(XmlPullParser xpp) {
     String contentType = xpp.getAttributeValue(null, "contentType");
+    return parseContentType(contentType);
+  }
+
+  protected static int parseContentType(String contentType) {
     return TextUtils.isEmpty(contentType) ? C.TRACK_TYPE_UNKNOWN
         : MimeTypes.BASE_TYPE_AUDIO.equals(contentType) ? C.TRACK_TYPE_AUDIO
             : MimeTypes.BASE_TYPE_VIDEO.equals(contentType) ? C.TRACK_TYPE_VIDEO
@@ -397,7 +419,7 @@ public class DashManifestParser extends DefaultHandler
                     : C.TRACK_TYPE_UNKNOWN;
   }
 
-  protected int getContentType(Format format) {
+  protected static int getContentType(Format format) {
     String sampleMimeType = format.sampleMimeType;
     if (TextUtils.isEmpty(sampleMimeType)) {
       return C.TRACK_TYPE_UNKNOWN;
@@ -409,6 +431,10 @@ public class DashManifestParser extends DefaultHandler
       return C.TRACK_TYPE_TEXT;
     }
     return C.TRACK_TYPE_UNKNOWN;
+  }
+
+  public String getManifestString() {
+    return manifestString;
   }
 
   /**
@@ -591,7 +617,7 @@ public class DashManifestParser extends DefaultHandler
         inbandEventStreams, Representation.REVISION_ID_DEFAULT);
   }
 
-  protected Format buildFormat(
+  protected static Format buildFormat(
       @Nullable String id,
       @Nullable String containerMimeType,
       int width,
@@ -677,7 +703,7 @@ public class DashManifestParser extends DefaultHandler
         language);
   }
 
-  protected Representation buildRepresentation(
+  protected static Representation buildRepresentation(
       RepresentationInfo representationInfo,
       @Nullable String label,
       @Nullable String extraDrmSchemeType,
@@ -1073,7 +1099,7 @@ public class DashManifestParser extends DefaultHandler
    *     unknown. Only needed if {@code repeatCount} is negative.
    * @return Calculated next start time.
    */
-  private long addSegmentTimelineElementsToList(
+  protected static long addSegmentTimelineElementsToList(
       List<SegmentTimelineElement> segmentTimeline,
       long startTime,
       long elementDuration,
@@ -1090,7 +1116,7 @@ public class DashManifestParser extends DefaultHandler
     return startTime;
   }
 
-  protected SegmentTimelineElement buildSegmentTimelineElement(long startTime, long duration) {
+  protected static SegmentTimelineElement buildSegmentTimelineElement(long startTime, long duration) {
     return new SegmentTimelineElement(startTime, duration);
   }
 
@@ -1180,6 +1206,22 @@ public class DashManifestParser extends DefaultHandler
     return UriUtil.resolve(parentBaseUrl, parseText(xpp, "BaseURL"));
   }
 
+  /**
+   * Parses a PatchLocation element.
+   *
+   * @param xpp The parser from which to read.
+   * @param parentBaseUrl A base URL for resolving the parsed URL.
+   * @throws XmlPullParserException If an error occurs parsing the element.
+   * @throws IOException If an error occurs reading the element.
+   * @return The parsed and resolved URL.
+   */
+  protected PatchLocation parsePatchLocation(XmlPullParser xpp, String parentBaseUrl)
+      throws XmlPullParserException, IOException {
+    long ttl = parseLong(xpp, "ttl", 0);
+    String url = UriUtil.resolve(parentBaseUrl, parseText(xpp, "PatchLocation"));
+    return new PatchLocation(ttl, url);
+  }
+
   // AudioChannelConfiguration parsing.
 
   protected int parseAudioChannelConfiguration(XmlPullParser xpp)
@@ -1200,7 +1242,7 @@ public class DashManifestParser extends DefaultHandler
 
   // Selection flag parsing.
 
-  protected int parseSelectionFlagsFromRoleDescriptors(List<Descriptor> roleDescriptors) {
+  protected static int parseSelectionFlagsFromRoleDescriptors(List<Descriptor> roleDescriptors) {
     for (int i = 0; i < roleDescriptors.size(); i++) {
       Descriptor descriptor = roleDescriptors.get(i);
       if ("urn:mpeg:dash:role:2011".equalsIgnoreCase(descriptor.schemeIdUri)
@@ -1214,7 +1256,7 @@ public class DashManifestParser extends DefaultHandler
   // Role and Accessibility parsing.
 
   @C.RoleFlags
-  protected int parseRoleFlagsFromRoleDescriptors(List<Descriptor> roleDescriptors) {
+  protected static int parseRoleFlagsFromRoleDescriptors(List<Descriptor> roleDescriptors) {
     @C.RoleFlags int result = 0;
     for (int i = 0; i < roleDescriptors.size(); i++) {
       Descriptor descriptor = roleDescriptors.get(i);
@@ -1226,7 +1268,7 @@ public class DashManifestParser extends DefaultHandler
   }
 
   @C.RoleFlags
-  protected int parseRoleFlagsFromAccessibilityDescriptors(
+  protected static int parseRoleFlagsFromAccessibilityDescriptors(
       List<Descriptor> accessibilityDescriptors) {
     @C.RoleFlags int result = 0;
     for (int i = 0; i < accessibilityDescriptors.size(); i++) {
@@ -1242,7 +1284,7 @@ public class DashManifestParser extends DefaultHandler
   }
 
   @C.RoleFlags
-  protected int parseDashRoleSchemeValue(@Nullable String value) {
+  protected static int parseDashRoleSchemeValue(@Nullable String value) {
     if (value == null) {
       return 0;
     }
@@ -1275,7 +1317,7 @@ public class DashManifestParser extends DefaultHandler
   }
 
   @C.RoleFlags
-  protected int parseTvaAudioPurposeCsValue(@Nullable String value) {
+  protected static int parseTvaAudioPurposeCsValue(@Nullable String value) {
     if (value == null) {
       return 0;
     }
@@ -1323,7 +1365,7 @@ public class DashManifestParser extends DefaultHandler
   /**
    * Removes unnecessary {@link SchemeData}s with null {@link SchemeData#data}.
    */
-  private static void filterRedundantIncompleteSchemeDatas(ArrayList<SchemeData> schemeDatas) {
+  protected static void filterRedundantIncompleteSchemeDatas(ArrayList<SchemeData> schemeDatas) {
     for (int i = schemeDatas.size() - 1; i >= 0; i--) {
       SchemeData schemeData = schemeDatas.get(i);
       if (!schemeData.hasData()) {
@@ -1401,7 +1443,7 @@ public class DashManifestParser extends DefaultHandler
    * @return The consistent language.
    */
   @Nullable
-  private static String checkLanguageConsistency(
+  protected static String checkLanguageConsistency(
       @Nullable String firstLanguage, @Nullable String secondLanguage) {
     if (firstLanguage == null) {
       return secondLanguage;
@@ -1424,7 +1466,7 @@ public class DashManifestParser extends DefaultHandler
    * @param secondType The second type.
    * @return The consistent type.
    */
-  private static int checkContentTypeConsistency(int firstType, int secondType) {
+  protected static int checkContentTypeConsistency(int firstType, int secondType) {
     if (firstType == C.TRACK_TYPE_UNKNOWN) {
       return secondType;
     } else if (secondType == C.TRACK_TYPE_UNKNOWN) {
@@ -1504,8 +1546,12 @@ public class DashManifestParser extends DefaultHandler
   }
 
   protected static float parseFrameRate(XmlPullParser xpp, float defaultValue) {
-    float frameRate = defaultValue;
     String frameRateAttribute = xpp.getAttributeValue(null, "frameRate");
+    return parseFrameRate(frameRateAttribute, defaultValue);
+  }
+
+  protected static float parseFrameRate(String frameRateAttribute, float defaultValue) {
+    float frameRate = defaultValue;
     if (frameRateAttribute != null) {
       Matcher frameRateMatcher = FRAME_RATE_PATTERN.matcher(frameRateAttribute);
       if (frameRateMatcher.matches()) {
@@ -1587,7 +1633,11 @@ public class DashManifestParser extends DefaultHandler
    *     not be parsed.
    */
   protected static int parseDolbyChannelConfiguration(XmlPullParser xpp) {
-    String value = Util.toLowerInvariant(xpp.getAttributeValue(null, "value"));
+    return parseDolbyChannelConfiguration(xpp.getAttributeValue(null, "value"));
+  }
+
+  protected static int parseDolbyChannelConfiguration(String attributeValue) {
+    String value = Util.toLowerInvariant(attributeValue);
     if (value == null) {
       return Format.NO_VALUE;
     }

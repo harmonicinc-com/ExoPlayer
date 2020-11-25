@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Patch xmlns="urn:mpeg:dash:schema:mpd-patch:2020" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:dash:schema:mpd-patch:2020 DASH-MPDPATCH.xsd" mpdId="mpd-id" originalPublishTime="2020-11-11T02:24:07.515591086Z" publishTime="2020-11-11T02:24:23.515486809Z">
+   <add sel="/MPD/Period[@id=&apos;87&apos;]/AdaptationSet[2]/SegmentTemplate/SegmentTimeline">
+      <S t="240376111" d="39680000"/>
+      <S t="280056111" d="18346666"/>
+   </add>
+</Patch>
