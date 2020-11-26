@@ -40,7 +40,6 @@ dependencies {
     implementation project(modulePrefix + 'library-core')
     compileOnly 'org.checkerframework:checker-qual:' + checkerframeworkVersion
     compileOnly 'org.checkerframework:checker-compat-qual:' + checkerframeworkVersion
-    implementation 'org.apache.directory.studio:org.apache.commons.io:2.4'
     implementation 'androidx.annotation:annotation:' + androidxAnnotationVersion
     testImplementation project(modulePrefix + 'testutils')
     testImplementation 'org.robolectric:robolectric:' + robolectricVersion
