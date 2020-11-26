@@ -6,11 +6,11 @@ import androidx.annotation.Nullable;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ParserException;
+import com.google.android.exoplayer2.source.dash.DashUtil;
 import com.google.android.exoplayer2.upstream.ParsingLoadable;
 import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.XmlPullParserUtil;
 
-import org.apache.commons.io.IOUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -98,7 +98,7 @@ public class DashManifestPatchParser extends DefaultHandler
     @Override
     public DashManifestPatch parse(Uri uri, InputStream inputStream) throws IOException {
         try {
-            this.manifestPatchString = IOUtils.toString(inputStream, Charset.defaultCharset());
+            this.manifestPatchString = DashUtil.inputStreamToString(inputStream, "UTF-8");
             InputStream textStream = new ByteArrayInputStream(this.manifestPatchString.getBytes());
 
             XmlPullParser xpp = xmlParserFactory.newPullParser();

@@ -30,6 +30,7 @@ import com.google.android.exoplayer2.drm.DrmInitData;
 import com.google.android.exoplayer2.drm.DrmInitData.SchemeData;
 import com.google.android.exoplayer2.extractor.mp4.PsshAtomUtil;
 import com.google.android.exoplayer2.metadata.emsg.EventMessage;
+import com.google.android.exoplayer2.source.dash.DashUtil;
 import com.google.android.exoplayer2.source.dash.manifest.SegmentBase.SegmentList;
 import com.google.android.exoplayer2.source.dash.manifest.SegmentBase.SegmentTemplate;
 import com.google.android.exoplayer2.source.dash.manifest.SegmentBase.SegmentTimelineElement;
@@ -42,7 +43,6 @@ import com.google.android.exoplayer2.util.UriUtil;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.util.XmlPullParserUtil;
 
-import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.compatqual.NullableType;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xmlpull.v1.XmlPullParser;
@@ -92,7 +92,7 @@ public class DashManifestParser extends DefaultHandler
   @Override
   public DashManifest parse(Uri uri, InputStream inputStream) throws IOException {
     try {
-      this.manifestString = IOUtils.toString(inputStream, Charset.defaultCharset());
+      this.manifestString = DashUtil.inputStreamToString(inputStream, "UTF-8");
       InputStream textStream = new ByteArrayInputStream(this.manifestString.getBytes());
 
       XmlPullParser xpp = xmlParserFactory.newPullParser();
