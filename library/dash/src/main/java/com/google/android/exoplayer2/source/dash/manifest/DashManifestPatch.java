@@ -95,7 +95,8 @@ public class DashManifestPatch {
             } else {
                 // Add Node
                 while (element.hasChildNodes()) {
-                    node.appendChild(element.getFirstChild());
+                    Node childNode = document.adoptNode(element.getFirstChild());
+                    node.appendChild(childNode);
                 }
             }
             return true;
@@ -134,7 +135,8 @@ public class DashManifestPatch {
                 Element node = (Element)xPath.compile(path).evaluate(document, XPathConstants.NODE);
                 Node parent = node.getParentNode();
                 if (element.getFirstChild() != null) {
-                    parent.replaceChild(element.getFirstChild(), node);
+                    Node childNode = document.adoptNode(element.getFirstChild());
+                    parent.replaceChild(childNode, node);
                 }
             }
             return true;
