@@ -30,9 +30,9 @@ public class DocumentToManifestConverterTest {
                 Uri.parse(baseURL),
                 TestUtil.getInputStream(ApplicationProvider.getApplicationContext(), MPD_WITH_PATCH));
 
-        DashManifestPatchParser patchParser = new DashManifestPatchParser();
-        patchParser.setManifestString(TestUtil.getString(ApplicationProvider.getApplicationContext(), MPD_WITH_PATCH));
-        DashManifest convertedManifest = DocumentToManifestConverter.convert(patchParser.getDocument(), baseURL);
+        DashManifestPatchMerger patchMerger = new DashManifestPatchMerger();
+        patchMerger.setManifestString(TestUtil.getString(ApplicationProvider.getApplicationContext(), MPD_WITH_PATCH));
+        DashManifest convertedManifest = DocumentToManifestConverter.convert(patchMerger.getDocument(), baseURL);
 
         Gson gson = new Gson();
         assertThat(gson.toJson(manifest)).isEqualTo(gson.toJson(convertedManifest));
@@ -46,9 +46,9 @@ public class DocumentToManifestConverterTest {
                 Uri.parse(baseURL),
                 TestUtil.getInputStream(ApplicationProvider.getApplicationContext(), MPD_WITH_MULTI_PERIOD_SCTE35));
 
-        DashManifestPatchParser patchParser = new DashManifestPatchParser();
-        patchParser.setManifestString(TestUtil.getString(ApplicationProvider.getApplicationContext(), MPD_WITH_MULTI_PERIOD_SCTE35));
-        DashManifest convertedManifest = DocumentToManifestConverter.convert(patchParser.getDocument(), baseURL);
+        DashManifestPatchMerger patchMerger = new DashManifestPatchMerger();
+        patchMerger.setManifestString(TestUtil.getString(ApplicationProvider.getApplicationContext(), MPD_WITH_MULTI_PERIOD_SCTE35));
+        DashManifest convertedManifest = DocumentToManifestConverter.convert(patchMerger.getDocument(), baseURL);
 
         Gson gson = new Gson();
         assertThat(gson.toJson(manifest)).isEqualTo(gson.toJson(convertedManifest));

@@ -1,6 +1,5 @@
 package com.google.android.exoplayer2.source.dash.manifest;
 
-import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.google.android.exoplayer2.testutil.TestUtil;
@@ -27,8 +26,7 @@ public class DashManifestPatchParserTest {
     public void testParseSamplePatch() throws IOException {
         DashManifestPatchParser parser = new DashManifestPatchParser();
         DashManifestPatch patch = parser.parse(
-                Uri.parse("https://example.com/test.mpd"),
-                TestUtil.getInputStream(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH));
+                TestUtil.getString(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH));
 
         assertThat(patch.mpdId).isEqualTo("mpd-id");
         assertThat(patch.originalPublishTimeMs).isEqualTo(Util.parseXsDateTime("2020-11-09T03:48:41.51468868Z"));
@@ -42,8 +40,7 @@ public class DashManifestPatchParserTest {
     public void testParseAddOperationWithSegments() throws IOException {
         DashManifestPatchParser parser = new DashManifestPatchParser();
         DashManifestPatch patch = parser.parse(
-                Uri.parse("https://example.com/test.mpd"),
-                TestUtil.getInputStream(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH_ADD_SEGMENTS));
+                TestUtil.getString(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH_ADD_SEGMENTS));
 
         assertThat(patch.operations.size()).isEqualTo(1);
         DashManifestPatch.AddOperation operation = (DashManifestPatch.AddOperation)patch.operations.get(0);
@@ -57,8 +54,7 @@ public class DashManifestPatchParserTest {
     public void testParseAddOperationWithPeriod() throws IOException {
         DashManifestPatchParser parser = new DashManifestPatchParser();
         DashManifestPatch patch = parser.parse(
-                Uri.parse("https://example.com/test.mpd"),
-                TestUtil.getInputStream(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH_ADD_PERIOD));
+                TestUtil.getString(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH_ADD_PERIOD));
 
         assertThat(patch.operations.size()).isEqualTo(1);
         DashManifestPatch.AddOperation operation = (DashManifestPatch.AddOperation)patch.operations.get(0);
@@ -72,8 +68,7 @@ public class DashManifestPatchParserTest {
     public void testParseAddAttribute() throws IOException {
         DashManifestPatchParser parser = new DashManifestPatchParser();
         DashManifestPatch patch = parser.parse(
-                Uri.parse("https://example.com/test.mpd"),
-                TestUtil.getInputStream(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH_ADD_ATTRIBUTE));
+                TestUtil.getString(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH_ADD_ATTRIBUTE));
 
         assertThat(patch.operations.size()).isEqualTo(1);
         DashManifestPatch.AddOperation operation = (DashManifestPatch.AddOperation)patch.operations.get(0);
@@ -87,8 +82,7 @@ public class DashManifestPatchParserTest {
     public void testParseReplaceAttribute() throws IOException {
         DashManifestPatchParser parser = new DashManifestPatchParser();
         DashManifestPatch patch = parser.parse(
-                Uri.parse("https://example.com/test.mpd"),
-                TestUtil.getInputStream(ApplicationProvider.getApplicationContext(),
+                TestUtil.getString(ApplicationProvider.getApplicationContext(),
                                         SAMPLE_MPD_PATCH_REPLACE_ATTRIBUTE));
 
         assertThat(patch.operations.size()).isEqualTo(1);
@@ -101,8 +95,7 @@ public class DashManifestPatchParserTest {
     public void testParseReplaceNode() throws IOException {
         DashManifestPatchParser parser = new DashManifestPatchParser();
         DashManifestPatch patch = parser.parse(
-                Uri.parse("https://example.com/test.mpd"),
-                TestUtil.getInputStream(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH_REPLACE_NODE));
+                TestUtil.getString(ApplicationProvider.getApplicationContext(), SAMPLE_MPD_PATCH_REPLACE_NODE));
 
         assertThat(patch.operations.size()).isEqualTo(1);
         DashManifestPatch.ReplaceOperation operation = (DashManifestPatch.ReplaceOperation)patch.operations.get(0);
