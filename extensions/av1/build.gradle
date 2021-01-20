@@ -52,3 +52,9 @@ ext {
     javadocTitle = 'AV1 extension'
 }
 apply from: '../../javadoc_library.gradle'
+
+ext {
+    releaseArtifact = 'extension-av1'
+    releaseDescription = 'AV1 extension for ExoPlayer.'
+}
+apply from: '../../publish-mavencentral.gradle'

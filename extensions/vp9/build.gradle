@@ -38,3 +38,9 @@ ext {
     javadocTitle = 'VP9 extension'
 }
 apply from: '../../javadoc_library.gradle'
+
+ext {
+    releaseArtifact = 'extension-vp9'
+    releaseDescription = 'VP9 extension for ExoPlayer.'
+}
+apply from: '../../publish-mavencentral.gradle'
