@@ -41,3 +41,9 @@ ext {
     javadocTitle = 'FLAC extension'
 }
 apply from: '../../javadoc_library.gradle'
+
+ext {
+    releaseArtifact = 'extension-flac'
+    releaseDescription = 'FLAC extension for ExoPlayer.'
+}
+apply from: '../../publish-mavencentral.gradle'

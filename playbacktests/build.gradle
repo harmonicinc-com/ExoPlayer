@@ -28,3 +28,9 @@ dependencies {
     androidTestImplementation project(modulePrefix + 'library-hls')
     androidTestImplementation project(modulePrefix + 'testutils')
 }
+
+ext {
+    releaseArtifact = 'exoplayer-playbacktests'
+    releaseDescription = 'Playback tests for ExoPlayer.'
+}
+apply from: '../publish-mavencentral.gradle'

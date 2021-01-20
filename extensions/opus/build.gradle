@@ -37,3 +37,9 @@ ext {
     javadocTitle = 'Opus extension'
 }
 apply from: '../../javadoc_library.gradle'
+
+ext {
+    releaseArtifact = 'extension-opus'
+    releaseDescription = 'Opus extension for ExoPlayer.'
+}
+apply from: '../../publish-mavencentral.gradle'
