@@ -48,3 +48,4 @@ ext {
     releaseDescription = 'Google VR extension for ExoPlayer.'
 }
 apply from: '../../publish.gradle'
+apply from: '../../publish-mavencentral.gradle'

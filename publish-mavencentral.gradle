@@ -1,0 +1,101 @@
+task androidSourcesJar(type: Jar) {
+    archiveClassifier.set('sources')
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives androidSourcesJar
+}
+
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+ext["signing.keyId"] = ''
+ext["signing.password"] = ''
+ext["signing.secretKeyRingFile"] = ''
+ext["ossrhUsername"] = ''
+ext["ossrhPassword"] = ''
+ext["publishGroupId"] = ''
+ext["sonatypeStagingProfileId"] = ''
+ext["buildNumber"] = ''
+
+println "Loading env vars"
+ext["signing.keyId"] = System.getenv('SIGNING_KEY_ID')
+ext["signing.password"] = System.getenv('SIGNING_PASSWORD')
+ext["signing.secretKeyRingFile"] = System.getenv('SIGNING_SECRET_KEY_RING_FILE')
+ext["ossrhUsername"] = System.getenv('OSSRH_USERNAME')
+ext["ossrhPassword"] = System.getenv('OSSRH_PASSWORD')
+ext["publishGroupId"] = System.getenv('PUBLISH_GROUP_ID')
+ext["sonatypeStagingProfileId"] = System.getenv('SONATYPE_STAGING_PROFILE_ID')
+ext["buildNumber"] = System.getenv('BUILD_NUMBER')
+
+nexusStaging {
+    packageGroup = publishGroupId
+    stagingProfileId = sonatypeStagingProfileId
+    username = ossrhUsername
+    password = ossrhPassword
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId publishGroupId
+            artifactId releaseArtifact
+            version "$releaseVersion.$buildNumber"
+            artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
+            artifact androidSourcesJar
+
+            pom {
+                name = releaseArtifact
+                description = releaseDescription
+                url = 'https://github.com/harmonicinc-com/ExoPlayer'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'harmonicinc-jigsaw'
+                        name = 'Albert Cheung'
+                        email = 'albert.cheung@harmonicinc.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:github.com/harmonicinc-com/ExoPlayer.git'
+                    developerConnection = 'scm:git:ssh://github.com/harmonicinc-com/ExoPlayer.git'
+                    url = 'https://github.com/harmonicinc-com/ExoPlayer'
+                }
+                withXml {
+                    def dependenciesNode = asNode().appendNode('dependencies')
+
+                    project.configurations.implementation.allDependencies.each {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "sonatype"
+
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
+            credentials {
+                username ossrhUsername
+                password ossrhPassword
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications
+}

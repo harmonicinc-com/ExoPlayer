@@ -50,3 +50,4 @@ ext {
     releaseDescription = 'Interactive Media Ads extension for ExoPlayer.'
 }
 apply from: '../../publish.gradle'
+apply from: '../../publish-mavencentral.gradle'

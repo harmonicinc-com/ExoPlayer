@@ -55,3 +55,4 @@ ext {
     releaseDescription = 'The ExoPlayer library SmoothStreaming module.'
 }
 apply from: '../../publish.gradle'
+apply from: '../../publish-mavencentral.gradle'

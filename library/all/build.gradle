@@ -36,3 +36,4 @@ ext {
     releaseDescription = 'The ExoPlayer library (all modules).'
 }
 apply from: '../../publish.gradle'
+apply from: '../../publish-mavencentral.gradle'
