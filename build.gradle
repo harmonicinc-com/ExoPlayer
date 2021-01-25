@@ -37,7 +37,7 @@ allprojects {
         }
         buildDir = "${externalBuildDir}/${project.name}"
     }
-    group = 'com.google.android.exoplayer'
+    group = 'com.github.harmonicinc-com'
 }
 
 apply from: 'javadoc_combined.gradle'
