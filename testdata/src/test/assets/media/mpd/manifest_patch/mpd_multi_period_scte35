@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<MPD profiles="urn:mpeg:dash:profile:isoff-live:2011" type="dynamic" availabilityStartTime="2020-11-23T04:35:37Z" minimumUpdatePeriod="PT2.0S" minBufferTime="PT0.1S" publishTime="2020-11-23T09:06:29.477547539Z" timeShiftBufferDepth="PT2M" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:scte35="urn:scte:scte35:2014:xml+bin" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd">
+	<Period start="PT4H28M47.9198763S" id="1074">
+		<EventStream timescale="10000000" schemeIdUri="urn:scte:scte35:2014:xml+bin">
+			<Event>
+				<scte35:Signal>
+					<scte35:Binary>/AAiAAAAAAAAAAAABQaAV0NICAAMQkJCX0FEX1NUQVJU5kNVSQ==</scte35:Binary>
+				</scte35:Signal>
+			</Event>
+		</EventStream>
+		<AdaptationSet mimeType="video/mp4" startWithSAP="1" segmentAlignment="true">
+			<SegmentTemplate timescale="10000000" presentationTimeOffset="161279198763" media="$RepresentationID$_Segment-$Time$.m4v" initialization="$RepresentationID$_init.m4i" availabilityTimeOffset="1.900000" availabilityTimeComplete="false">
+				<SegmentTimeline>
+					<S t="161325865430" d="20000000" r="1"/>
+				</SegmentTimeline>
+			</SegmentTemplate>
+			<Representation width="320" height="240" frameRate="15/2" codecs="avc1.428029" scanType="progressive" id="1589948452168item-01item" bandwidth="90000"/>
+			<Representation width="320" height="240" frameRate="15" codecs="avc1.4d4029" scanType="progressive" id="1589948452168item-02item" bandwidth="500000"/>
+			<Representation width="480" height="360" frameRate="15" codecs="avc1.4d4029" scanType="progressive" id="1589948452168item-03item" bandwidth="1000000"/>
+		</AdaptationSet>
+	</Period>
+	<Period start="PT4H28M57.9198763S" id="1075">
+		<EventStream timescale="10000000" schemeIdUri="urn:scte:scte35:2014:xml+bin">
+			<Event>
+				<scte35:Signal>
+					<scte35:Binary>/AAgAAAAAAAAAAAABQaAV1EDqAAKQkJCX0FEX0VORF9n1ks=</scte35:Binary>
+				</scte35:Signal>
+			</Event>
+		</EventStream>
+		<AdaptationSet mimeType="video/mp4" startWithSAP="1" segmentAlignment="true">
+			<SegmentTemplate timescale="10000000" presentationTimeOffset="161379198763" media="$RepresentationID$_Segment-$Time$.m4v" initialization="$RepresentationID$_init.m4i" availabilityTimeOffset="1.900000" availabilityTimeComplete="false">
+				<SegmentTimeline>
+					<S t="161379198763" d="20000000"/>
+					<S t="161405865430" d="20000000" r="7"/>
+				</SegmentTimeline>
+			</SegmentTemplate>
+			<Representation width="320" height="240" frameRate="15/2" codecs="avc1.428029" scanType="progressive" id="1589948452168item-01item" bandwidth="90000"/>
+			<Representation width="320" height="240" frameRate="15" codecs="avc1.4d4029" scanType="progressive" id="1589948452168item-02item" bandwidth="500000"/>
+			<Representation width="480" height="360" frameRate="15" codecs="avc1.4d4029" scanType="progressive" id="1589948452168item-03item" bandwidth="1000000"/>
+		</AdaptationSet>
+	</Period>
+	<Period start="PT4H29M17.9198763S" id="1076">
+		<EventStream timescale="10000000" schemeIdUri="urn:scte:scte35:2014:xml+bin">
+			<Event>
+				<scte35:Signal>
+					<scte35:Binary>/AAiAAAAAAAAAAAABQaAV2x66AAMQkJCX0FEX1NUQVJU2FPjtA==</scte35:Binary>
+				</scte35:Signal>
+			</Event>
+		</EventStream>
+		<AdaptationSet mimeType="video/mp4" startWithSAP="1" segmentAlignment="true">
+			<SegmentTemplate timescale="10000000" presentationTimeOffset="161579198763" media="$RepresentationID$_Segment-$Time$.m4v" initialization="$RepresentationID$_init.m4i" availabilityTimeOffset="1.900000" availabilityTimeComplete="false">
+				<SegmentTimeline>
+					<S t="161579198763" d="20000000"/>
+					<S t="161605865430" d="20000000" r="2"/>
+				</SegmentTimeline>
+			</SegmentTemplate>
+			<Representation width="320" height="240" frameRate="15/2" codecs="avc1.428029" scanType="progressive" id="1589948452168item-01item" bandwidth="90000"/>
+			<Representation width="320" height="240" frameRate="15" codecs="avc1.4d4029" scanType="progressive" id="1589948452168item-02item" bandwidth="500000"/>
+			<Representation width="480" height="360" frameRate="15" codecs="avc1.4d4029" scanType="progressive" id="1589948452168item-03item" bandwidth="1000000"/>
+		</AdaptationSet>
+	</Period>
+	<UTCTiming schemeIdUri="urn:mpeg:dash:utc:http-iso:2014" value="http://time.akamai.com/?iso&amp;ms"/>
+</MPD>

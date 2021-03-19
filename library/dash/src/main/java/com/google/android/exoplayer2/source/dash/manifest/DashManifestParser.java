@@ -28,6 +28,7 @@ import com.google.android.exoplayer2.drm.DrmInitData;
 import com.google.android.exoplayer2.drm.DrmInitData.SchemeData;
 import com.google.android.exoplayer2.extractor.mp4.PsshAtomUtil;
 import com.google.android.exoplayer2.metadata.emsg.EventMessage;
+import com.google.android.exoplayer2.source.dash.DashUtil;
 import com.google.android.exoplayer2.source.dash.manifest.SegmentBase.SegmentList;
 import com.google.android.exoplayer2.source.dash.manifest.SegmentBase.SegmentTemplate;
 import com.google.android.exoplayer2.source.dash.manifest.SegmentBase.SegmentTimelineElement;
@@ -41,6 +42,7 @@ import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.util.XmlPullParserUtil;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,6 +83,7 @@ public class DashManifestParser extends DefaultHandler
       };
 
   private final XmlPullParserFactory xmlParserFactory;
+  private String manifestString;
 
   public DashManifestParser() {
     try {
@@ -95,8 +98,11 @@ public class DashManifestParser extends DefaultHandler
   @Override
   public DashManifest parse(Uri uri, InputStream inputStream) throws IOException {
     try {
+      this.manifestString = DashUtil.inputStreamToString(inputStream, "UTF-8");
+      InputStream textStream = new ByteArrayInputStream(this.manifestString.getBytes());
+
       XmlPullParser xpp = xmlParserFactory.newPullParser();
-      xpp.setInput(inputStream, null);
+      xpp.setInput(textStream, null);
       int eventType = xpp.next();
       if (eventType != XmlPullParser.START_TAG || !"MPD".equals(xpp.getName())) {
         throw new ParserException(
@@ -127,6 +133,7 @@ public class DashManifestParser extends DefaultHandler
     Uri location = null;
     ServiceDescriptionElement serviceDescription = null;
     long baseUrlAvailabilityTimeOffsetUs = dynamic ? 0 : C.TIME_UNSET;
+    PatchLocation patchLocation = null;
 
     List<Period> periods = new ArrayList<>();
     List<Period> earlyAccessPeriods = new ArrayList<>();
@@ -142,6 +149,8 @@ public class DashManifestParser extends DefaultHandler
           baseUrl = parseBaseUrl(xpp, baseUrl);
           seenFirstBaseUrl = true;
         }
+      } else if (XmlPullParserUtil.isStartTag(xpp, "PatchLocation")) {
+        patchLocation = parsePatchLocation(xpp, baseUrl);
       } else if (XmlPullParserUtil.isStartTag(xpp, "ProgramInformation")) {
         programInformation = parseProgramInformation(xpp);
       } else if (XmlPullParserUtil.isStartTag(xpp, "UTCTiming")) {
@@ -205,6 +214,7 @@ public class DashManifestParser extends DefaultHandler
         utcTiming,
         serviceDescription,
         location,
+        patchLocation,
         periods);
       manifest.earlyAccessPeriods = earlyAccessPeriods;
       return manifest;
@@ -223,6 +233,7 @@ public class DashManifestParser extends DefaultHandler
       @Nullable UtcTimingElement utcTiming,
       @Nullable ServiceDescriptionElement serviceDescription,
       @Nullable Uri location,
+      @Nullable PatchLocation patchLocation,
       List<Period> periods) {
     return new DashManifest(
         availabilityStartTime,
@@ -237,6 +248,7 @@ public class DashManifestParser extends DefaultHandler
         utcTiming,
         serviceDescription,
         location,
+        patchLocation,
         periods);
   }
 
@@ -531,6 +543,10 @@ public class DashManifestParser extends DefaultHandler
             : MimeTypes.BASE_TYPE_VIDEO.equals(contentType) ? C.TRACK_TYPE_VIDEO
                 : MimeTypes.BASE_TYPE_TEXT.equals(contentType) ? C.TRACK_TYPE_TEXT
                     : C.TRACK_TYPE_UNKNOWN;
+  }
+
+  public String getManifestString() {
+    return manifestString;
   }
 
   /**
@@ -1362,6 +1378,22 @@ public class DashManifestParser extends DefaultHandler
       return Long.MAX_VALUE;
     }
     return (long) (Float.parseFloat(value) * C.MICROS_PER_SECOND);
+  }
+
+  /**
+   * Parses a PatchLocation element.
+   *
+   * @param xpp The parser from which to read.
+   * @param parentBaseUrl A base URL for resolving the parsed URL.
+   * @throws XmlPullParserException If an error occurs parsing the element.
+   * @throws IOException If an error occurs reading the element.
+   * @return The parsed and resolved URL.
+   */
+  protected PatchLocation parsePatchLocation(XmlPullParser xpp, String parentBaseUrl)
+      throws XmlPullParserException, IOException {
+    long ttl = parseLong(xpp, "ttl", 0);
+    String url = UriUtil.resolve(parentBaseUrl, parseText(xpp, "PatchLocation"));
+    return new PatchLocation(ttl, url);
   }
 
   // AudioChannelConfiguration parsing.

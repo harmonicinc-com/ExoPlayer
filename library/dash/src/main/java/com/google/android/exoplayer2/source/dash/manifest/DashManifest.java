@@ -88,6 +88,9 @@ public class DashManifest implements FilterableManifest<DashManifest> {
   /** The location of this manifest, or null if not present. */
   @Nullable public final Uri location;
 
+  /** The patch location of this manifest, or null if not present. */
+  @Nullable public final PatchLocation patchLocation;
+
   /** The {@link ProgramInformation}, or null if not present. */
   @Nullable public final ProgramInformation programInformation;
 
@@ -96,7 +99,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
 
   /**
    * @deprecated Use {@link #DashManifest(long, long, long, boolean, long, long, long, long,
-   *     ProgramInformation, UtcTimingElement, ServiceDescriptionElement, Uri, List)}.
+   *     ProgramInformation, UtcTimingElement, ServiceDescriptionElement, Uri, PatchLocation ,List)}.
    */
   @Deprecated
   public DashManifest(
@@ -110,6 +113,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
       long publishTimeMs,
       @Nullable UtcTimingElement utcTiming,
       @Nullable Uri location,
+      @Nullable PatchLocation patchLocation,
       List<Period> periods) {
     this(
         availabilityStartTimeMs,
@@ -124,6 +128,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
         utcTiming,
         /* serviceDescription= */ null,
         location,
+        patchLocation,
         periods);
   }
 
@@ -140,6 +145,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
       @Nullable UtcTimingElement utcTiming,
       @Nullable ServiceDescriptionElement serviceDescription,
       @Nullable Uri location,
+      @Nullable PatchLocation patchLocation,
       List<Period> periods) {
     this.availabilityStartTimeMs = availabilityStartTimeMs;
     this.durationMs = durationMs;
@@ -153,6 +159,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
     this.utcTiming = utcTiming;
     this.location = location;
     this.serviceDescription = serviceDescription;
+    this.patchLocation = patchLocation;
     this.periods = periods == null ? Collections.emptyList() : periods;
     this.earlyAccessPeriods = Collections.emptyList();
   }
@@ -217,6 +224,7 @@ public class DashManifest implements FilterableManifest<DashManifest> {
         utcTiming,
         serviceDescription,
         location,
+        patchLocation,
         copyPeriods);
   }
 

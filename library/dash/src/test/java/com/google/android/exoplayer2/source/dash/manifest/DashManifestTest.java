@@ -247,6 +247,7 @@ public class DashManifestTest {
         UTC_TIMING,
         serviceDescription,
         Uri.EMPTY,
+        null,
         Arrays.asList(periods));
   }
 
