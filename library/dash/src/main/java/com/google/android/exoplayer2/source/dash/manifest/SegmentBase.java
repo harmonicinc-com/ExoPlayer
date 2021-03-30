@@ -182,6 +182,9 @@ public abstract class SegmentBase {
       if (segmentTimeline == null) {
         // All segments are of equal duration (with the possible exception of the last one).
         long durationUs = (duration * C.MICROS_PER_SECOND) / timescale;
+        if (durationUs == 0){
+          return firstSegmentNum;
+        }
         long segmentNum = startNumber + timeUs / durationUs;
         // Ensure we stay within bounds.
         return segmentNum < firstSegmentNum
