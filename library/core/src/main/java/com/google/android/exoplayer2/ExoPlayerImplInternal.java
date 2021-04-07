@@ -896,6 +896,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
     }
   }
 
+  public PlaybackParameters getMediaClockPlaybackParameters(){
+    return mediaClock.getPlaybackParameters();
+  }
+
   private void notifyTrackSelectionRebuffer() {
     MediaPeriodHolder periodHolder = queue.getPlayingPeriod();
     while (periodHolder != null) {

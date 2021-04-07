@@ -666,6 +666,10 @@ import java.util.List;
     return playbackInfo.playbackParameters;
   }
 
+  public PlaybackParameters getMediaClockPlaybackParameters() {
+    return internalPlayer.getMediaClockPlaybackParameters();
+  }
+
   @Override
   public void setSeekParameters(@Nullable SeekParameters seekParameters) {
     if (seekParameters == null) {

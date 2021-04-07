@@ -2294,4 +2294,8 @@ public class SimpleExoPlayer extends BasePlayer
       updateWakeAndWifiLock();
     }
   }
+
+  public PlaybackParameters getMediaClockPlaybackParameters(){
+    return player.getMediaClockPlaybackParameters();
+  }
 }
