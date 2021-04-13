@@ -19,6 +19,25 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/*
+Usage:
+
+AdaptiveTrackSelectionFactory aTSF = new AdaptiveTrackSelection.Factory(0, 3000, 1000, 1f);
+LowLatencyTrackSelector trackSelector = new LowLatencyTrackSelector(aTSF);
+SimpleExoPlayer player = new SimpleExoPlayer.Builder(context)
+    .setTrackSelector(trackSelector)
+    .build();
+
+LowLatencyABRController abrController = new LowLatencyABRController(
+    player,
+    trackSelector as LowLatencyTrackSelector
+);
+
+abrController.start();
+
+player.prepare(curMediaSource!!)
+
+ */
 public final class LowLatencyABRController {
     private int currentSelectedBitrate;
     private final int videoRendererIndex;
