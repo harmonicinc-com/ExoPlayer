@@ -12,15 +12,15 @@ import static com.google.common.truth.Truth.assertThat;
 /** Unit tests for {@link DashManifestPatchParser}. */
 @RunWith(AndroidJUnit4.class)
 public class DashManifestPatchParserTest {
-    private static final String SAMPLE_MPD_PATCH = "manifest_patch/mpd_patch";
-    private static final String SAMPLE_MPD_PATCH_ADD_SEGMENTS = "manifest_patch/mpd_patch_add_segments";
-    private static final String SAMPLE_MPD_PATCH_ADD_PERIOD = "manifest_patch/mpd_patch_add_period";
-    private static final String SAMPLE_MPD_PATCH_ADD_ATTRIBUTE = "manifest_patch/mpd_patch_add_attribute";
-    private static final String SAMPLE_MPD_PATCH_REPLACE_ATTRIBUTE = "manifest_patch/mpd_patch_replace_attribute";
-    private static final String SAMPLE_MPD_PATCH_REPLACE_NODE = "manifest_patch/mpd_patch_replace_node";
-    private static final String XML_ADD_SEGMENTS = "manifest_patch/xml_add_segments";
-    private static final String XML_ADD_PERIOD = "manifest_patch/xml_add_period";
-    private static final String XML_REPLACE_NODE = "manifest_patch/xml_replace_node";
+    private static final String SAMPLE_MPD_PATCH = "media/mpd/manifest_patch/mpd_patch";
+    private static final String SAMPLE_MPD_PATCH_ADD_SEGMENTS = "media/mpd/manifest_patch/mpd_patch_add_segments";
+    private static final String SAMPLE_MPD_PATCH_ADD_PERIOD = "media/mpd/manifest_patch/mpd_patch_add_period";
+    private static final String SAMPLE_MPD_PATCH_ADD_ATTRIBUTE = "media/mpd/manifest_patch/mpd_patch_add_attribute";
+    private static final String SAMPLE_MPD_PATCH_REPLACE_ATTRIBUTE = "media/mpd/manifest_patch/mpd_patch_replace_attribute";
+    private static final String SAMPLE_MPD_PATCH_REPLACE_NODE = "media/mpd/manifest_patch/mpd_patch_replace_node";
+    private static final String XML_ADD_SEGMENTS = "media/mpd/manifest_patch/xml_add_segments";
+    private static final String XML_ADD_PERIOD = "media/mpd/manifest_patch/xml_add_period";
+    private static final String XML_REPLACE_NODE = "media/mpd/manifest_patch/xml_replace_node";
 
     @Test
     public void testParseSamplePatch() throws IOException {
